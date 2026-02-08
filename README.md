@@ -13,7 +13,7 @@ To build and run LUMA on your machine:
     ```
 
 2.  **Run the automated setup:**
-    This script builds the OSRM C++ routing engine for iOS ARM64 and configures all Swift Package dependencies.
+    This script builds the OSRM C++ routing engine for iOS ARM64 and configures all Swift Package dependencies. **It generates `OSRM.xcframework`, which is required for the app to build.**
     ```bash
     ./setup.sh
     ```

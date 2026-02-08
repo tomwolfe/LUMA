@@ -19,12 +19,12 @@ cd LUMA
 
 ## Step 2: Build OSRM for iOS
 
-OSRM is a C++ library that must be cross-compiled for iOS. We provide a script that automates this using Mason for dependencies.
+OSRM is a C++ library that must be cross-compiled for iOS. We provide a script that automates this using Mason for dependencies. **Running this script is mandatory as it generates the `OSRM.xcframework` required by the `OSRM-iOS` Swift package.**
 
 ```bash
 # This will take 5-10 minutes depending on your machine.
 # It clones OSRM, downloads iOS dependencies (Boost, TBB, etc.),
-# and builds libosrm.a for ARM64.
+# builds libosrm.a for ARM64, and creates OSRM.xcframework in the OSRM-iOS/ directory.
 ./OSRM-iOS/build.sh
 ```
 

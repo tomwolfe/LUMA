@@ -44,6 +44,7 @@ conan.lock
 # SQLite and Generated Data
 #
 pois.sqlite
+!LUMA/Resources/pois.sqlite
 
 # Explicitly allow bundled assets for Xcode
 !LUMA/Resources/*.osrm*

@@ -34,12 +34,14 @@ class POIDatabase {
     }
     
     func search(query: String) -> [POIItem] {
+        var results: [POIItem] = []
+        guard let db = db else {
+            print("Database not initialized")
+            return results
+        }
+        
         var statement: OpaquePointer?
         let queryString = "SELECT id, name, city, latitude, longitude FROM pois WHERE name LIKE ? OR city LIKE ? LIMIT 50"
-        
-        var results: [POIItem] = []
-        
-        if sqlite3_prepare_v2(db, queryString, -1, &statement, nil) == SQLITE_OK {
             let searchPattern = "%\(query)%"
             sqlite3_bind_text(statement, 1, (searchPattern as NSString).utf8String, -1, nil)
             sqlite3_bind_text(statement, 2, (searchPattern as NSString).utf8String, -1, nil)

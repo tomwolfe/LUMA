@@ -6,8 +6,23 @@ struct MapboxView: UIViewRepresentable {
     @ObservedObject var mapManager = MapManager.shared
     
     func makeUIView(context: Context) -> MapView {
-        guard let stylePath = Bundle.main.path(forResource: "style", ofType: "json") else {
-            return MapView(frame: .zero)
+        guard mapManager.isMapReady, let stylePath = Bundle.main.path(forResource: "style", ofType: "json") else {
+            let emptyMapView = MapView(frame: .zero)
+            let label = UILabel()
+            label.text = "Offline data missing. Please ensure the app is properly installed."
+            label.textColor = .white
+            label.numberOfLines = 0
+            label.textAlignment = .center
+            label.font = UIFont.monospacedSystemFont(ofSize: 14, weight: .light)
+            label.translatesAutoresizingMaskIntoConstraints = false
+            emptyMapView.addSubview(label)
+            NSLayoutConstraint.activate([
+                label.centerXAnchor.constraint(equalTo: emptyMapView.centerXAnchor),
+                label.centerYAnchor.constraint(equalTo: emptyMapView.centerYAnchor),
+                label.leadingAnchor.constraint(equalTo: emptyMapView.leadingAnchor, constant: 20),
+                label.trailingAnchor.constraint(equalTo: emptyMapView.trailingAnchor, constant: -20)
+            ])
+            return emptyMapView
         }
         
         let accessToken = UserDefaults.standard.string(forKey: "MBXAccessToken") ?? ""

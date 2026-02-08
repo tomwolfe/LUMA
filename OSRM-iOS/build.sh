@@ -4,7 +4,8 @@ set -e
 # OSRM-iOS Build Script
 # This script builds OSRM for iOS ARM64 and creates an XCFramework for Swift Package Manager.
 
-PACKAGE_DIR=$(pwd)
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+PACKAGE_DIR="$SCRIPT_DIR"
 BUILD_DIR="$PACKAGE_DIR/build_temp"
 OSRM_BACKEND_DIR="$BUILD_DIR/osrm-backend"
 mkdir -p "$BUILD_DIR"
