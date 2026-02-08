@@ -17,18 +17,30 @@ git clone <repository-url>
 cd LUMA
 ```
 
-## Step 2: Build OSRM for iOS
+## Step 2: Download Offline Data
 
-OSRM is a C++ library that must be cross-compiled for iOS. We provide a script that automates this using Mason for dependencies. **Running this script is mandatory as it generates the `OSRM.xcframework` required by the `OSRM-iOS` Swift package.**
+LUMA requires pre-processed map and routing data. 
+
+1.  **Create the data directories**:
+    ```bash
+    mkdir -p osrm_data
+    ```
+2.  **Download the Data Pack**:
+    Download the `LUMA-Data-v1.zip` from our [latest release](https://github.com/luma-navigation/data/releases/latest).
+3.  **Place the Files**:
+    *   **Map Tiles**: Move `sf.mbtiles`, `paris.mbtiles`, and `tokyo.mbtiles` to `LUMA/Resources/`.
+    *   **Routing Data**: Move all `.osrm.*` files (e.g., `sf.osrm.hsgr`, etc.) to the `osrm_data/` directory at the root of the project.
+
+## Step 3: Run the Setup Script
+
+The setup script builds the OSRM engine and bundles the routing data into the app's dependencies.
 
 ```bash
-# This will take 5-10 minutes depending on your machine.
-# It clones OSRM, downloads iOS dependencies (Boost, TBB, etc.),
-# builds libosrm.a for ARM64, and creates OSRM.xcframework in the OSRM-iOS/ directory.
-./OSRM-iOS/build.sh
+# This will take 5-10 minutes.
+./setup.sh
 ```
 
-## Step 3: Open in Xcode
+## Step 4: Open in Xcode
 
 You can open the project by opening the `Package.swift` file in Xcode, or by opening the folder in Xcode.
 

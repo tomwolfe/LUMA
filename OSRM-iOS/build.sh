@@ -59,28 +59,32 @@ cd "$BUILD_DIR/libs"
 # We exclude some system libs if they were caught by accident, but mostly we want all boost, tbb, osrm.
 libtool -static -o libosrm_combined.a *.a
 
-echo "--- 7. Creating XCFramework ---"
+echo "--- 7. Bundling OSRM data files ---"
+# Create a Resources directory in the package's target folder
+RESOURCES_DIR="$PACKAGE_DIR/Sources/OSRM-iOS/Resources"
+mkdir -p "$RESOURCES_DIR"
+
+# The data files must be prepared in the 'osrm_data' directory at the project root.
+# This avoids circular dependencies and ensures a clean build process.
+DATA_SOURCE_DIR="$PACKAGE_DIR/../osrm_data"
+
+echo "Copying OSRM data files from $DATA_SOURCE_DIR to $RESOURCES_DIR..."
+
+if [ -d "$DATA_SOURCE_DIR" ] && [ "$(ls -A "$DATA_SOURCE_DIR" 2>/dev/null)" ]; then
+    cp "$DATA_SOURCE_DIR"/*.osrm.* "$RESOURCES_DIR/"
+    echo "✅ Successfully bundled OSRM data files."
+else
+    echo "⚠️  WARNING: No OSRM data files found in $DATA_SOURCE_DIR."
+    echo "Please download the required .osrm.* files (sf.osrm.*, paris.osrm.*, tokyo.osrm.*)"
+    echo "and place them in the 'osrm_data/' directory at the root of the project."
+    echo "Refer to BUILD_INSTRUCTIONS.md for details."
+fi
+
+echo "--- 8. Creating XCFramework ---"
 rm -rf "$PACKAGE_DIR/OSRM.xcframework"
 xcodebuild -create-xcframework \
     -library "$BUILD_DIR/libs/libosrm_combined.a" \
     -headers "$XCF_HEADERS" \
     -output "$PACKAGE_DIR/OSRM.xcframework"
-
-echo "--- 8. Bundling OSRM data files ---"
-# Create a Resources directory in the package's target folder
-RESOURCES_DIR="$PACKAGE_DIR/Sources/OSRM-iOS/Resources"
-mkdir -p "$RESOURCES_DIR"
-
-# Copy all .osrm.* files from the build directory as requested.
-# The script handles city-specific names by using a wildcard.
-echo "Copying OSRM data files to $RESOURCES_DIR..."
-# Try to copy from the build directory as specified in the requirements
-cp "$OSRM_BACKEND_DIR/build/"*.osrm.* "$RESOURCES_DIR/" 2>/dev/null || true
-
-# On a clean machine, if they aren't in the build directory, they might be in the project's Resources
-if [ ! "$(ls -A "$RESOURCES_DIR" 2>/dev/null)" ]; then
-    echo "Files not found in $OSRM_BACKEND_DIR/build/, checking project Resources..."
-    cp "$SCRIPT_DIR/../LUMA/Resources/"*.osrm.* "$RESOURCES_DIR/" 2>/dev/null || true
-fi
 
 echo "--- OSRM.xcframework created and data files bundled successfully! ---"
