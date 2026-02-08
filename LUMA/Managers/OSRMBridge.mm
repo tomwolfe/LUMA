@@ -10,6 +10,37 @@
 #include <osrm/json_container.hpp>
 #endif
 
+@implementation RoutingResult
+- (instancetype)initWithCoordinates:(nullable NSArray<NSValue *> *)coordinates 
+                       instructions:(nullable NSArray<NSString *> *)instructions 
+                       errorMessage:(nullable NSString *)errorMessage 
+                            success:(BOOL)success {
+    self = [super init];
+    if (self) {
+        _coordinates = coordinates;
+        _instructions = instructions;
+        _errorMessage = errorMessage;
+        _success = success;
+    }
+    return self;
+}
+
++ (instancetype)successWithCoordinates:(NSArray<NSValue *> *)coordinates 
+                          instructions:(NSArray<NSString *> *)instructions {
+    return [[self alloc] initWithCoordinates:coordinates 
+                                instructions:instructions 
+                                errorMessage:nil 
+                                     success:YES];
+}
+
++ (instancetype)failureWithMessage:(NSString *)message {
+    return [[self alloc] initWithCoordinates:nil 
+                                instructions:nil 
+                                errorMessage:message 
+                                     success:NO];
+}
+@end
+
 @implementation OSRMBridge {
     std::unique_ptr<osrm::OSRM> _osrm;
 }
@@ -33,9 +64,9 @@
     return self;
 }
 
-- (NSDictionary *)calculateRouteFrom:(CLLocationCoordinate2D)start 
+- (RoutingResult *)calculateRouteFrom:(CLLocationCoordinate2D)start 
                                   to:(CLLocationCoordinate2D)end {
-    if (!_osrm) return @{};
+    if (!_osrm) return [RoutingResult failureWithMessage:@"OSRM engine not initialized"];
 
     osrm::RouteParameters params;
     // OSRM expects {longitude, latitude}
@@ -53,13 +84,13 @@
     const auto status = _osrm->Route(params, result);
     
     if (status != osrm::Status::Ok) {
-        return @{};
+        return [RoutingResult failureWithMessage:@"No route found or OSRM error"];
     }
     
     auto &json_result = std::get<osrm::json::Object>(result);
     auto &routes = json_result.values["routes"].get<osrm::json::Array>();
     
-    if (routes.values.empty()) return @{};
+    if (routes.values.empty()) return [RoutingResult failureWithMessage:@"No routes returned in result"];
     
     auto &route = routes.values[0].get<osrm::json::Object>();
     
@@ -138,10 +169,7 @@
         }
     }
     
-    return @{
-        @"coordinates": routePoints,
-        @"instructions": instructions
-    };
+    return [RoutingResult successWithCoordinates:routePoints instructions:instructions];
 }
 
 @end

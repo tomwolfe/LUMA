@@ -21,9 +21,13 @@ class MapManager: ObservableObject {
         let cityName = city.lowercased().replacingOccurrences(of: " ", with: "_")
         
         // Check for .mbtiles
-        let mbtilesPath = Bundle.main.path(forResource: cityName, ofType: "mbtiles")
-        if mbtilesPath == nil {
+        guard let mbtilesPath = Bundle.main.path(forResource: cityName, ofType: "mbtiles") else {
             print("Missing .mbtiles for \(city)")
+            return false
+        }
+        
+        if !verifyFileIntegrity(at: mbtilesPath) {
+            print("Corrupted .mbtiles for \(city)")
             return false
         }
         
@@ -39,9 +43,45 @@ class MapManager: ObservableObject {
             }
         }
         
-        if hsgrPath == nil {
+        guard let finalHsgrPath = hsgrPath else {
             print("Missing .osrm data for \(city)")
             return false
+        }
+        
+        if !verifyFileIntegrity(at: finalHsgrPath) {
+            print("Corrupted .osrm data for \(city)")
+            return false
+        }
+        
+        return true
+    }
+
+    private func verifyFileIntegrity(at path: String) -> Bool {
+        let fileManager = FileManager.default
+        guard let attributes = try? fileManager.attributesOfItem(atPath: path),
+              let fileSize = attributes[.size] as? UInt64 else {
+            return false
+        }
+        
+        // Basic integrity check: File must be > 1KB
+        if fileSize < 1024 {
+            return false
+        }
+        
+        // Advanced: Check for magic bytes/header
+        if let fileHandle = FileHandle(forReadingAtPath: path) {
+            let header = fileHandle.readData(ofLength: 8)
+            fileHandle.closeFile()
+            
+            if path.hasSuffix(".mbtiles") {
+                // SQLite magic header: "SQLite format 3\0"
+                let sqliteMagic = "SQLite f".data(using: .ascii)
+                if header.prefix(8) != sqliteMagic {
+                    return false
+                }
+            }
+            // For OSRM, we could check specific headers if known, 
+            // but at least we've checked existence, size and readability.
         }
         
         return true
@@ -70,20 +110,27 @@ class MapManager: ObservableObject {
         let start = userLocation
         
         DispatchQueue.global(qos: .userInitiated).async {
-            let routeData = bridge.calculateRoute(from: start, to: destination)
+            let result = bridge.calculateRoute(from: start, to: destination)
             
-            let routeValues = routeData["coordinates"] as? [NSValue] ?? []
-            let coordinates = routeValues.compactMap { value -> CLLocationCoordinate2D? in
-                var coord = CLLocationCoordinate2D()
-                value.getValue(&coord)
-                return coord
-            }
-            
-            let instructions = routeData["instructions"] as? [String] ?? []
-            
-            DispatchQueue.main.async {
-                self.currentRoute = coordinates
-                self.instructions = instructions
+            if result.success {
+                let routeValues = result.coordinates ?? []
+                let coordinates = routeValues.compactMap { value -> CLLocationCoordinate2D? in
+                    var coord = CLLocationCoordinate2D()
+                    value.getValue(&coord)
+                    return coord
+                }
+                
+                let instructions = result.instructions ?? []
+                
+                DispatchQueue.main.async {
+                    self.currentRoute = coordinates
+                    self.instructions = instructions
+                }
+            } else {
+                print("Routing error: \(result.errorMessage ?? "Unknown error")")
+                DispatchQueue.main.async {
+                    self.configurationError = result.errorMessage
+                }
             }
         }
     }

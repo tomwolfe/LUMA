@@ -3,6 +3,17 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@interface RoutingResult : NSObject
+@property (nonatomic, readonly, nullable) NSArray<NSValue *> *coordinates;
+@property (nonatomic, readonly, nullable) NSArray<NSString *> *instructions;
+@property (nonatomic, readonly, nullable) NSString *errorMessage;
+@property (nonatomic, readonly) BOOL success;
+
++ (instancetype)successWithCoordinates:(NSArray<NSValue *> *)coordinates 
+                          instructions:(NSArray<NSString *> *)instructions;
++ (instancetype)failureWithMessage:(NSString *)message;
+@end
+
 @interface OSRMBridge : NSObject
 
 /**
@@ -15,10 +26,10 @@ NS_ASSUME_NONNULL_BEGIN
  * Calculates a route between two coordinates.
  * @param start Starting coordinate.
  * @param end Destination coordinate.
- * @return A dictionary containing 'coordinates' (NSArray<NSValue *>) and 'instructions' (NSArray<NSString *>).
+ * @return A RoutingResult containing coordinates and instructions or an error message.
  */
-- (NSDictionary *)calculateRouteFrom:(CLLocationCoordinate2D)start 
-                                  to:(CLLocationCoordinate2D)end;
+- (RoutingResult *)calculateRouteFrom:(CLLocationCoordinate2D)start 
+                                   to:(CLLocationCoordinate2D)end;
 
 @end
 
