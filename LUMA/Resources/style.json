@@ -4,7 +4,11 @@
   "sources": {
     "local-tiles": {
       "type": "vector",
-      "url": "mapbox://mapbox.mapbox-streets-v8"
+      "tiles": [
+        "local://tiles/{z}/{x}/{y}.vector.pbf"
+      ],
+      "minzoom": 0,
+      "maxzoom": 14
     }
   },
   "layers": [

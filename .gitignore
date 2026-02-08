@@ -31,6 +31,7 @@ Carthage/Build/
 # OSRM and Conan Build Artifacts
 #
 osrm-build/
+osrm_data/
 *.osrm*
 *.mbtiles
 conanfile.txt
@@ -41,7 +42,11 @@ conan.lock
 # SQLite and Generated Data
 #
 pois.sqlite
-generate_pois.py
+
+# Explicitly allow bundled assets for Xcode
+!LUMA/Resources/*.osrm*
+!LUMA/Resources/*.sqlite
+!LUMA/Resources/*.mbtiles
 
 # OS / Misc
 #
@@ -49,3 +54,11 @@ generate_pois.py
 *.swp
 *.lock
 build_osrm_ios.sh
+generate_pois.py
+generate_mbtiles.py
+prepare_osrm_data.sh
+BUILD_OSRM_IOS.md
+.env
+__pycache__/
+*.py[cod]
+*$py.class

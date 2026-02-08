@@ -61,19 +61,26 @@ class MapManager: ObservableObject {
         let accessToken = "pk.eyJ1IjoibHVtYS1kZXYiLCJhIjoiY2x4bXYxdXNyMGlydzJycnh6bWJ5cjZpbiJ9.placeholder"
         UserDefaults.standard.set(accessToken, forKey: "MBXAccessToken")
         
-        // Import bundled .mbtiles into the TileStore
-        if let mbtilesPath = Bundle.main.path(forResource: "sf", ofType: "mbtiles") {
-            let offlineManager = OfflineManager()
-            offlineManager.importTileRegion(forId: "sf-region", path: mbtilesPath) { result in
+        let offlineManager = OfflineManager()
+        let cities = ["sf", "paris", "tokyo"]
+        
+        for city in cities {
+            guard let mbtilesPath = Bundle.main.path(forResource: city, ofType: "mbtiles") else {
+                print("Could not find .mbtiles for \(city)")
+                continue
+            }
+            
+            // Import bundled .mbtiles into the TileStore
+            offlineManager.importTileRegion(forId: "\(city)-region", path: mbtilesPath) { result in
                 switch result {
                 case .success:
-                    print("Successfully imported offline tiles from \(mbtilesPath)")
+                    print("Successfully imported offline tiles for \(city) from \(mbtilesPath)")
                 case .failure(let error):
-                    print("Failed to import offline tiles: \(error)")
+                    print("Failed to import offline tiles for \(city): \(error)")
                 }
             }
         }
         
-        print("Mapbox configured for offline use with bundled .mbtiles")
+        print("Mapbox configured for offline use with bundled .mbtiles for all cities")
     }
 }
