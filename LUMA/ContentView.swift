@@ -3,6 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @State private var appState: AppState = .home
     @State private var selectedPOI: POIItem?
+    @ObservedObject private var mapManager = MapManager.shared
     
     enum AppState {
         case home
@@ -15,23 +16,27 @@ struct ContentView: View {
         ZStack {
             Color.black.edgesIgnoringSafeArea(.all)
             
-            switch appState {
-            case .home:
-                HomeView(onTap: { appState = .search })
-            case .search:
-                SearchView(
-                    onSelect: { poi in 
-                        selectedPOI = poi
-                        appState = .navigation 
-                    }, 
-                    onCancel: { appState = .home }
-                )
-            case .navigation:
-                if let poi = selectedPOI {
-                    NavigationView(destination: poi, onArrive: { appState = .arrival })
+            if let error = mapManager.configurationError {
+                ConfigurationRequiredView(message: error)
+            } else {
+                switch appState {
+                case .home:
+                    HomeView(onTap: { appState = .search })
+                case .search:
+                    SearchView(
+                        onSelect: { poi in 
+                            selectedPOI = poi
+                            appState = .navigation 
+                        }, 
+                        onCancel: { appState = .home }
+                    )
+                case .navigation:
+                    if let poi = selectedPOI {
+                        NavigationView(destination: poi, onArrive: { appState = .arrival })
+                    }
+                case .arrival:
+                    ArrivalView(onFinish: { appState = .home })
                 }
-            case .arrival:
-                ArrivalView(onFinish: { appState = .home })
             }
         }
     }

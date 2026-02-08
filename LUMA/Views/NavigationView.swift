@@ -6,6 +6,7 @@ struct NavigationView: View {
     @StateObject private var batteryManager = BatteryManager()
     @StateObject private var audioManager = AudioManager.shared
     @ObservedObject private var mapManager = MapManager.shared
+    @ObservedObject private var locationManager = LocationManager.shared
     @State private var eta = "12:47"
     @State private var showingJourneyMode = false
     @State private var dragOffset: CGFloat = 0
@@ -63,11 +64,20 @@ struct NavigationView: View {
                     }
                 }
         )
-        .onTapGesture {
-            onArrive()
-        }
         .onAppear {
             mapManager.calculateRoute(to: CLLocationCoordinate2D(latitude: destination.latitude, longitude: destination.longitude), city: destination.city)
+        }
+        .onReceive(locationManager.$lastLocation) { location in
+            guard let location = location else { return }
+            let destLocation = CLLocation(latitude: destination.latitude, longitude: destination.longitude)
+            let distance = location.distance(from: destLocation)
+            
+            if distance < 20 {
+                onArrive()
+            }
+            
+            // Also update route if user moved significantly (optional, but good for "production-ready")
+            // For now, let's just stick to the proximity check as requested.
         }
     }
 }

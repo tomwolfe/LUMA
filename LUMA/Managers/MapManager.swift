@@ -9,11 +9,44 @@ class MapManager: ObservableObject {
     @Published var currentRoute: [CLLocationCoordinate2D] = []
     @Published var instructions: [String] = []
     @Published var isMapReady: Bool = true
+    @Published var configurationError: String?
+    
     private var osrmBridge: OSRMBridge?
     private var currentCity: String?
+    private let locationManager = LocationManager.shared
     
     private init() {}
     
+    func validateData(for city: String) -> Bool {
+        let cityName = city.lowercased().replacingOccurrences(of: " ", with: "_")
+        
+        // Check for .mbtiles
+        let mbtilesPath = Bundle.main.path(forResource: cityName, ofType: "mbtiles")
+        if mbtilesPath == nil {
+            print("Missing .mbtiles for \(city)")
+            return false
+        }
+        
+        // Check for .osrm files (at least .hsgr)
+        let fileName = "\(cityName).osrm"
+        var hsgrPath: String? = Bundle.main.path(forResource: fileName, ofType: "hsgr")
+        if hsgrPath == nil {
+            for bundle in Bundle.allBundles {
+                if let path = bundle.path(forResource: fileName, ofType: "hsgr") {
+                    hsgrPath = path
+                    break
+                }
+            }
+        }
+        
+        if hsgrPath == nil {
+            print("Missing .osrm data for \(city)")
+            return false
+        }
+        
+        return true
+    }
+
     func calculateRoute(to destination: CLLocationCoordinate2D, city: String) {
         // Load the correct OSRM file if city changed
         if currentCity != city {
@@ -28,8 +61,13 @@ class MapManager: ObservableObject {
             return
         }
         
-        // Use a real starting point (mocked here as SF center if not provided)
-        let start = CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194)
+        // Use real-time location from LocationManager
+        guard let userLocation = locationManager.lastLocation?.coordinate else {
+            print("User location not available yet")
+            return
+        }
+        
+        let start = userLocation
         
         DispatchQueue.global(qos: .userInitiated).async {
             let routeData = bridge.calculateRoute(from: start, to: destination)
@@ -54,8 +92,7 @@ class MapManager: ObservableObject {
         let cityName = city.lowercased().replacingOccurrences(of: " ", with: "_")
         let fileName = "\(cityName).osrm"
         
-        // Search in all bundles to find the OSRM data, as it might be in the main bundle 
-        // or a Swift Package resource bundle (OSRM-iOS).
+        // Search in all bundles to find the OSRM data
         var hsgrPath: String? = Bundle.main.path(forResource: fileName, ofType: "hsgr")
         
         if hsgrPath == nil {
@@ -85,31 +122,10 @@ class MapManager: ObservableObject {
         // Read the Mapbox access token from Info.plist as required
         let token = Bundle.main.object(forInfoDictionaryKey: "MBXAccessToken") as? String
         
-        if token == nil || token == "YOUR_MAPBOX_ACCESS_TOKEN" {
+        if token == nil || token == "" || token == "YOUR_MAPBOX_ACCESS_TOKEN" {
             DispatchQueue.main.async {
-                let alert = UIAlertController(
-                    title: "Mapbox Token Required",
-                    message: "You must add your own Mapbox access token to LUMA/Info.plist under the key MBXAccessToken.",
-                    preferredStyle: .alert
-                )
-                alert.addAction(UIAlertAction(title: "OK", style: .default, handler: { _ in
-                    exit(1)
-                }))
-                
-                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                   let window = windowScene.windows.first,
-                   var topController = window.rootViewController {
-                    while let presentedViewController = topController.presentedViewController {
-                        topController = presentedViewController
-                    }
-                    topController.present(alert, animated: true, completion: nil)
-                } else {
-                    print("Mapbox Token Required: Please add your token to LUMA/Info.plist")
-                    // If we can't show UI yet, we might need a small delay or just exit
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                        exit(1)
-                    }
-                }
+                self.configurationError = "Mapbox Access Token is missing or invalid in Info.plist. Please add a valid token under the key MBXAccessToken."
+                self.isMapReady = false
             }
             return
         }
@@ -138,6 +154,7 @@ class MapManager: ObservableObject {
         
         if !allFilesPresent {
             DispatchQueue.main.async {
+                self.configurationError = "Some map data files (.mbtiles) are missing from the bundle."
                 self.isMapReady = false
             }
         }

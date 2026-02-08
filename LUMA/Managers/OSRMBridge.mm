@@ -88,19 +88,52 @@
             auto &maneuver = step.values["maneuver"].get<osrm::json::Object>();
             
             // OSRM provides instructions in several ways. We'll try to find a descriptive one.
-            // In a production app, you'd use osrm-text-instructions for localization.
             if (maneuver.values.count("instruction")) {
                 std::string instr = maneuver.values.at("instruction").get<osrm::json::String>().value;
                 [instructions addObject:[NSString stringWithUTF8String:instr.c_str()]];
             } else {
-                // Fallback for demo: type and modifier
+                // Enhanced localization logic (simplified osrm-text-instructions)
                 std::string type = maneuver.values.at("type").get<osrm::json::String>().value;
                 std::string modifier = "";
                 if (maneuver.values.count("modifier")) {
                     modifier = maneuver.values.at("modifier").get<osrm::json::String>().value;
                 }
-                NSString *instr = [NSString stringWithFormat:@"%s %s", type.c_str(), modifier.c_str()];
-                [instructions addObject:instr];
+                
+                NSString *readableInstr = @"";
+                
+                if (type == "depart") {
+                    readableInstr = @"Head out";
+                } else if (type == "arrive") {
+                    readableInstr = @"You have arrived";
+                } else if (type == "turn") {
+                    if (modifier == "left") readableInstr = @"Turn left";
+                    else if (modifier == "right") readableInstr = @"Turn right";
+                    else if (modifier == "sharp left") readableInstr = @"Turn sharp left";
+                    else if (modifier == "sharp right") readableInstr = @"Turn sharp right";
+                    else if (modifier == "slight left") readableInstr = @"Bear left";
+                    else if (modifier == "slight right") readableInstr = @"Bear right";
+                    else readableInstr = @"Turn";
+                } else if (type == "continue") {
+                    readableInstr = @"Continue straight";
+                } else if (type == "roundabout") {
+                    readableInstr = @"Enter roundabout";
+                } else if (type == "exit roundabout") {
+                    readableInstr = @"Exit roundabout";
+                } else if (type == "new name") {
+                    readableInstr = @"Continue onto";
+                } else {
+                    readableInstr = [NSString stringWithFormat:@"%s %s", type.c_str(), modifier.c_str()];
+                }
+                
+                // Add street name if available
+                if (step.values.count("name")) {
+                    std::string name = step.values.at("name").get<osrm::json::String>().value;
+                    if (!name.empty()) {
+                        readableInstr = [readableInstr stringByAppendingFormat:@" onto %s", name.c_str()];
+                    }
+                }
+                
+                [instructions addObject:readableInstr];
             }
         }
     }
