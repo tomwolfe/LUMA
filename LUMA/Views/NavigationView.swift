@@ -21,11 +21,21 @@ struct NavigationView: View {
             
             // UI Overlays
             VStack {
-                // Top ETA
-                Text(eta)
-                    .font(.system(size: 24, weight: .light, design: .monospaced))
-                    .foregroundColor(.white)
-                    .padding(.top, 60)
+                // Top ETA and Instruction
+                VStack(spacing: 8) {
+                    Text(eta)
+                        .font(.system(size: 24, weight: .light, design: .monospaced))
+                        .foregroundColor(.white)
+                    
+                    if let firstInstruction = mapManager.instructions.first {
+                        Text(firstInstruction.uppercased())
+                            .font(.system(size: 16, weight: .bold, design: .monospaced))
+                            .foregroundColor(.white)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 40)
+                    }
+                }
+                .padding(.top, 60)
                 
                 Spacer()
                 

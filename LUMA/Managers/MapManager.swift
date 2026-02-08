@@ -6,6 +6,7 @@ class MapManager: ObservableObject {
     static let shared = MapManager()
     
     @Published var currentRoute: [CLLocationCoordinate2D] = []
+    @Published var instructions: [String] = []
     private var osrmBridge: OSRMBridge?
     private var currentCity: String?
     
@@ -26,15 +27,20 @@ class MapManager: ObservableObject {
         let start = CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194)
         
         DispatchQueue.global(qos: .userInitiated).async {
-            let routeValues = bridge.calculateRoute(from: start, to: destination)
+            let routeData = bridge.calculateRoute(from: start, to: destination)
+            
+            let routeValues = routeData["coordinates"] as? [NSValue] ?? []
             let coordinates = routeValues.compactMap { value -> CLLocationCoordinate2D? in
                 var coord = CLLocationCoordinate2D()
                 value.getValue(&coord)
                 return coord
             }
             
+            let instructions = routeData["instructions"] as? [String] ?? []
+            
             DispatchQueue.main.async {
                 self.currentRoute = coordinates
+                self.instructions = instructions
             }
         }
     }
@@ -51,14 +57,22 @@ class MapManager: ObservableObject {
     }
     
     func configureOfflineMaps() {
-        // Initialize Mapbox with a placeholder token as requested
+        // Initialize Mapbox with a placeholder token
         let accessToken = "pk.eyJ1IjoibHVtYS1kZXYiLCJhIjoiY2x4bXYxdXNyMGlydzJycnh6bWJ5cjZpbiJ9.placeholder"
         UserDefaults.standard.set(accessToken, forKey: "MBXAccessToken")
         
-        // Configure TileStore for offline-only use
-        let tileStore = TileStore.default
-        // In a real offline app, we would have already downloaded tiles into the TileStore
-        // or bundled them as a .mbtiles file that we register with the TileStore.
+        // Import bundled .mbtiles into the TileStore
+        if let mbtilesPath = Bundle.main.path(forResource: "sf", ofType: "mbtiles") {
+            let offlineManager = OfflineManager()
+            offlineManager.importTileRegion(forId: "sf-region", path: mbtilesPath) { result in
+                switch result {
+                case .success:
+                    print("Successfully imported offline tiles from \(mbtilesPath)")
+                case .failure(let error):
+                    print("Failed to import offline tiles: \(error)")
+                }
+            }
+        }
         
         print("Mapbox configured for offline use with bundled .mbtiles")
     }

@@ -1,0 +1,40 @@
+{
+  "version": 8,
+  "name": "LUMA-Offline",
+  "sources": {
+    "local-tiles": {
+      "type": "vector",
+      "url": "mapbox://mapbox.mapbox-streets-v8"
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#000000"
+      }
+    },
+    {
+      "id": "roads",
+      "type": "line",
+      "source": "local-tiles",
+      "source-layer": "transportation",
+      "paint": {
+        "line-color": "#333333",
+        "line-width": 1.5
+      }
+    },
+    {
+      "id": "roads-major",
+      "type": "line",
+      "source": "local-tiles",
+      "source-layer": "transportation",
+      "filter": ["==", "class", "primary"],
+      "paint": {
+        "line-color": "#555555",
+        "line-width": 3
+      }
+    }
+  ]
+}

@@ -15,10 +15,10 @@ NS_ASSUME_NONNULL_BEGIN
  * Calculates a route between two coordinates.
  * @param start Starting coordinate.
  * @param end Destination coordinate.
- * @return An array of coordinates representing the route.
+ * @return A dictionary containing 'coordinates' (NSArray<NSValue *>) and 'instructions' (NSArray<NSString *>).
  */
-- (NSArray<NSValue *> *)calculateRouteFrom:(CLLocationCoordinate2D)start 
-                                        to:(CLLocationCoordinate2D)end;
+- (NSDictionary *)calculateRouteFrom:(CLLocationCoordinate2D)start 
+                                  to:(CLLocationCoordinate2D)end;
 
 @end
 
