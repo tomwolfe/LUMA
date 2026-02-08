@@ -17,6 +17,8 @@ DerivedData
 *.hmap
 *.ipa
 *.xcuserstate
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
 
 # Swift Package Manager
 #
@@ -62,3 +64,11 @@ BUILD_OSRM_IOS.md
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Build artifacts that might be generated
+#
+*.app
+*.app.dSYM
+*.framework
+*.dylib
+*.bundle

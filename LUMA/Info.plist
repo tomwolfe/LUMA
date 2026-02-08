@@ -4,6 +4,8 @@
 <dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>LUMA uses your location only for real-time navigation. Your data never leaves this device.</string>
+	<key>MBXAccessToken</key>
+	<string>YOUR_MAPBOX_ACCESS_TOKEN</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>

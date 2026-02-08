@@ -57,9 +57,12 @@ class MapManager: ObservableObject {
     }
     
     func configureOfflineMaps() {
-        // Initialize Mapbox with a placeholder token
-        let accessToken = "pk.eyJ1IjoibHVtYS1kZXYiLCJhIjoiY2x4bXYxdXNyMGlydzJycnh6bWJ5cjZpbiJ9.placeholder"
-        UserDefaults.standard.set(accessToken, forKey: "MBXAccessToken")
+        // Mapbox Access Token should be set in Info.plist under MBXAccessToken
+        // or provided via a build setting. We use a placeholder here for the build to pass.
+        if UserDefaults.standard.string(forKey: "MBXAccessToken") == nil {
+            let placeholderToken = "YOUR_MAPBOX_ACCESS_TOKEN"
+            UserDefaults.standard.set(placeholderToken, forKey: "MBXAccessToken")
+        }
         
         let offlineManager = OfflineManager()
         let cities = ["sf", "paris", "tokyo"]
