@@ -25,7 +25,7 @@ struct MapboxView: UIViewRepresentable {
             return emptyMapView
         }
         
-        let accessToken = UserDefaults.standard.string(forKey: "MBXAccessToken") ?? ""
+        let accessToken = Bundle.main.object(forInfoDictionaryKey: "MBXAccessToken") as? String ?? ""
         let resourceOptions = ResourceOptions(accessToken: accessToken, tileStore: TileStore.default)
         
         let options = MapInitOptions(

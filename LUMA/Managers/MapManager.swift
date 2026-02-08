@@ -52,10 +52,23 @@ class MapManager: ObservableObject {
     
     private func loadOSRM(for city: String) {
         let cityName = city.lowercased().replacingOccurrences(of: " ", with: "_")
-        // The OSRM files in this project use the naming convention: city.osrm.hsgr, city.osrm.geometry, etc.
-        // We look for the .hsgr file to determine the base path for the OSRM engine.
-        guard let hsgrPath = Bundle.main.path(forResource: "\(cityName).osrm", ofType: "hsgr") else {
-            print("Could not find OSRM data files for \(city). Expected \(cityName).osrm.hsgr in bundle.")
+        let fileName = "\(cityName).osrm"
+        
+        // Search in all bundles to find the OSRM data, as it might be in the main bundle 
+        // or a Swift Package resource bundle (OSRM-iOS).
+        var hsgrPath: String? = Bundle.main.path(forResource: fileName, ofType: "hsgr")
+        
+        if hsgrPath == nil {
+            for bundle in Bundle.allBundles {
+                if let path = bundle.path(forResource: fileName, ofType: "hsgr") {
+                    hsgrPath = path
+                    break
+                }
+            }
+        }
+        
+        guard let finalPath = hsgrPath else {
+            print("Could not find OSRM data files for \(city). Expected \(fileName).hsgr in bundle.")
             DispatchQueue.main.async {
                 self.isMapReady = false
             }
@@ -63,7 +76,7 @@ class MapManager: ObservableObject {
         }
         
         // Strip the .hsgr extension to get the base path required by OSRMBridge
-        let basePath = (hsgrPath as NSString).deletingPathExtension
+        let basePath = (finalPath as NSString).deletingPathExtension
         osrmBridge = OSRMBridge(initWithOSRMFile: basePath)
         currentCity = city
     }

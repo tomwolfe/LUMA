@@ -14,7 +14,10 @@ let package = Package(
     targets: [
         .target(
             name: "OSRM-iOS",
-            dependencies: ["OSRM"]),
+            dependencies: ["OSRM"],
+            resources: [
+                .process("Resources")
+            ]),
         .binaryTarget(
             name: "OSRM",
             path: "OSRM.xcframework")

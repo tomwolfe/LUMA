@@ -66,4 +66,21 @@ xcodebuild -create-xcframework \
     -headers "$XCF_HEADERS" \
     -output "$PACKAGE_DIR/OSRM.xcframework"
 
-echo "--- OSRM.xcframework created successfully! ---"
+echo "--- 8. Bundling OSRM data files ---"
+# Create a Resources directory in the package's target folder
+RESOURCES_DIR="$PACKAGE_DIR/Sources/OSRM-iOS/Resources"
+mkdir -p "$RESOURCES_DIR"
+
+# Copy all .osrm.* files from the build directory as requested.
+# The script handles city-specific names by using a wildcard.
+echo "Copying OSRM data files to $RESOURCES_DIR..."
+# Try to copy from the build directory as specified in the requirements
+cp "$OSRM_BACKEND_DIR/build/"*.osrm.* "$RESOURCES_DIR/" 2>/dev/null || true
+
+# On a clean machine, if they aren't in the build directory, they might be in the project's Resources
+if [ ! "$(ls -A "$RESOURCES_DIR" 2>/dev/null)" ]; then
+    echo "Files not found in $OSRM_BACKEND_DIR/build/, checking project Resources..."
+    cp "$SCRIPT_DIR/../LUMA/Resources/"*.osrm.* "$RESOURCES_DIR/" 2>/dev/null || true
+fi
+
+echo "--- OSRM.xcframework created and data files bundled successfully! ---"
