@@ -42,6 +42,8 @@ class POIDatabase {
         
         var statement: OpaquePointer?
         let queryString = "SELECT id, name, city, latitude, longitude FROM pois WHERE name LIKE ? OR city LIKE ? LIMIT 50"
+        
+        if sqlite3_prepare_v2(db, queryString, -1, &statement, nil) == SQLITE_OK {
             let searchPattern = "%\(query)%"
             sqlite3_bind_text(statement, 1, (searchPattern as NSString).utf8String, -1, nil)
             sqlite3_bind_text(statement, 2, (searchPattern as NSString).utf8String, -1, nil)
@@ -55,6 +57,8 @@ class POIDatabase {
                 
                 results.append(POIItem(id: id, name: name, city: city, latitude: lat, longitude: lon))
             }
+        } else {
+            print("Error preparing search statement: \(String(cString: sqlite3_errmsg(db)))")
         }
         
         sqlite3_finalize(statement)

@@ -52,20 +52,26 @@ class MapManager: ObservableObject {
     
     private func loadOSRM(for city: String) {
         let cityName = city.lowercased().replacingOccurrences(of: " ", with: "_")
-        guard let path = Bundle.main.path(forResource: cityName, ofType: "osrm") else {
-            print("Could not find OSRM file for \(city)")
+        // The OSRM files in this project use the naming convention: city.osrm.hsgr, city.osrm.geometry, etc.
+        // We look for the .hsgr file to determine the base path for the OSRM engine.
+        guard let hsgrPath = Bundle.main.path(forResource: "\(cityName).osrm", ofType: "hsgr") else {
+            print("Could not find OSRM data files for \(city). Expected \(cityName).osrm.hsgr in bundle.")
             DispatchQueue.main.async {
                 self.isMapReady = false
             }
             return
         }
         
-        osrmBridge = OSRMBridge(initWithOSRMFile: path)
+        // Strip the .hsgr extension to get the base path required by OSRMBridge
+        let basePath = (hsgrPath as NSString).deletingPathExtension
+        osrmBridge = OSRMBridge(initWithOSRMFile: basePath)
         currentCity = city
     }
     
     func configureOfflineMaps() {
-        let token = UserDefaults.standard.string(forKey: "MBXAccessToken")
+        // Read the Mapbox access token from Info.plist as required
+        let token = Bundle.main.object(forInfoDictionaryKey: "MBXAccessToken") as? String
+        
         if token == nil || token == "YOUR_MAPBOX_ACCESS_TOKEN" {
             DispatchQueue.main.async {
                 let alert = UIAlertController(
