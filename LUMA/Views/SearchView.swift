@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct SearchView: View {
-    let onSelect: (POI) -> Void
+    let onSelect: (POIItem) -> Void
     let onCancel: () -> Void
     @State private var searchText = ""
     @FocusState private var isFocused: Bool

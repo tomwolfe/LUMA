@@ -12,13 +12,14 @@ let package = Package(
             targets: ["LUMA"]),
     ],
     dependencies: [
-        // Mapbox dependency would go here if using SPM
-        // .package(url: "https://github.com/mapbox/mapbox-maps-ios.git", from: "10.0.0"),
+        .package(url: "https://github.com/mapbox/mapbox-maps-ios.git", from: "11.0.0"),
     ],
     targets: [
         .target(
             name: "LUMA",
-            dependencies: [],
+            dependencies: [
+                .product(name: "MapboxMaps", package: "mapbox-maps-ios")
+            ],
             path: "LUMA"),
         .testTarget(
             name: "LUMATests",

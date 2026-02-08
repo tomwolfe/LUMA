@@ -2,7 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var appState: AppState = .home
-    @State private var selectedPOI: POI?
+    @State private var selectedPOI: POIItem?
     
     enum AppState {
         case home

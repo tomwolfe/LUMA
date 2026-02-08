@@ -1,10 +1,11 @@
 import SwiftUI
 
 struct NavigationView: View {
-    let destination: POI
+    let destination: POIItem
     let onArrive: () -> Void
     @StateObject private var batteryManager = BatteryManager()
     @StateObject private var audioManager = AudioManager.shared
+    @ObservedObject private var mapManager = MapManager.shared
     @State private var eta = "12:47"
     @State private var showingJourneyMode = false
     @State private var dragOffset: CGFloat = 0
@@ -13,18 +14,10 @@ struct NavigationView: View {
         ZStack {
             Color.black.edgesIgnoringSafeArea(.all)
             
-            // Minimalist Route Line (Placeholder)
-            Path { path in
-                path.move(to: CGPoint(x: 200, y: 700))
-                path.addLine(to: CGPoint(x: 200, y: 100))
-            }
-            .stroke(Color.white, lineWidth: 2)
-            
-            // User Location Dot
-            Circle()
-                .fill(Color.white)
-                .frame(width: 8, height: 8)
-                .position(x: 200, y: 700)
+            // Real Mapbox Map with OSRM Route
+            MapboxView()
+                .edgesIgnoringSafeArea(.all)
+                .opacity(0.8) // Keep the minimalist aesthetic
             
             // UI Overlays
             VStack {
@@ -62,6 +55,9 @@ struct NavigationView: View {
         )
         .onTapGesture {
             onArrive()
+        }
+        .onAppear {
+            mapManager.calculateRoute(to: CLLocationCoordinate2D(latitude: destination.latitude, longitude: destination.longitude), city: destination.city)
         }
     }
 }
